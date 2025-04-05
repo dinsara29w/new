@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Background Remover</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen flex items-center justify-center text-white">
+  <div class="w-full max-w-xl p-6 bg-white/5 rounded-2xl shadow-2xl">
+    <h1 class="text-3xl font-bold mb-6 text-center text-white">AI Background Remover</h1>
+    <input type="file" id="imageInput" accept="image/*" class="mb-4 block w-full text-white" />
+    <div id="preview" class="mb-4 hidden">
+      <p class="mb-2">Original:</p>
+      <img id="originalImage" class="rounded-xl w-full" />
+    </div>
+    <button id="removeBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded w-full transition-all">Remove Background</button>
+    <div id="result" class="mt-6 hidden">
+      <p class="mb-2">Result:</p>
+      <img id="outputImage" class="rounded-xl w-full" />
+      <a id="downloadBtn" class="mt-4 block text-center bg-green-500 hover:bg-green-600 py-2 rounded transition-all" download="no-bg.png">Download</a>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const originalImage = document.getElementById('originalImage');
+    const outputImage = document.getElementById('outputImage');
+    const removeBtn = document.getElementById('removeBtn');
+    const result = document.getElementById('result');
+    const downloadBtn = document.getElementById('downloadBtn');
+    let uploadedFile;
+
+    input.addEventListener('change', () => {
+      const file = input.files[0];
+      if (file) {
+        uploadedFile = file;
+        const reader = new FileReader();
+        reader.onload = () => {
+          originalImage.src = reader.result;
+          preview.classList.remove('hidden');
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+
+    removeBtn.addEventListener('click', async () => {
+      if (!uploadedFile) return;
+      const formData = new FormData();
+      formData.append('file', uploadedFile);
+      removeBtn.textContent = 'Processing...';
+      removeBtn.disabled = true;
+
+      const response = await fetch('/remove-bg', {
+        method: 'POST',
+        body: formData
+      });
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+
+      outputImage.src = imageUrl;
+      downloadBtn.href = imageUrl;
+      result.classList.remove('hidden');
+
+      removeBtn.textContent = 'Remove Background';
+      removeBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>
